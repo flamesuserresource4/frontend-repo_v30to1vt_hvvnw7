@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { ShoppingCart, Heart, MessageCircle, User, Search, Sun, Moon, Home } from 'lucide-react';
 
-export default function Navbar({ cartCount = 2, wishlistCount = 5, onSearch }) {
+const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
+export default function Navbar({ cartCount: initialCart = 0, wishlistCount: initialWishlist = 0, onSearch }) {
   const [query, setQuery] = useState('');
   const [dark, setDark] = useState(false);
+  const [cartCount, setCartCount] = useState(initialCart);
+  const [wishlistCount, setWishlistCount] = useState(initialWishlist);
 
   useEffect(() => {
     if (dark) {
@@ -12,6 +16,25 @@ export default function Navbar({ cartCount = 2, wishlistCount = 5, onSearch }) {
       document.documentElement.classList.remove('dark');
     }
   }, [dark]);
+
+  useEffect(() => {
+    // fetch counts for demo user
+    const USER_ID = 'demo-user';
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/cart?user_id=${USER_ID}`);
+        const cart = await res.json();
+        setCartCount(cart.items?.reduce((a, b) => a + (b.qty || 1), 0) || 0);
+
+        const res2 = await fetch(`${API_BASE}/api/wishlist?user_id=${USER_ID}`);
+        const wl = await res2.json();
+        setWishlistCount(wl.items?.length || 0);
+      } catch (_) {
+        // noop
+      }
+    };
+    load();
+  }, []);
 
   const submitSearch = (e) => {
     e.preventDefault();
