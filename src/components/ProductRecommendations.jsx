@@ -47,7 +47,8 @@ export default function ProductRecommendations({ query, category, onCartChange, 
 
   const filtered = useMemo(() => items, [items]);
 
-  const addToCart = async (productId) => {
+  const addToCart = async (pid) => {
+    const productId = pid?.toString();
     try {
       await fetch(`${API_BASE}/api/cart`, {
         method: 'POST',
@@ -60,7 +61,8 @@ export default function ProductRecommendations({ query, category, onCartChange, 
     }
   };
 
-  const addToWishlist = async (productId) => {
+  const addToWishlist = async (pid) => {
+    const productId = pid?.toString();
     try {
       await fetch(`${API_BASE}/api/wishlist`, {
         method: 'POST',
@@ -91,50 +93,57 @@ export default function ProductRecommendations({ query, category, onCartChange, 
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map((p, i) => (
-          <motion.div
-            key={p.id || p._id || i}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            className="group overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
-          >
-            <div className="relative aspect-[4/5] overflow-hidden">
-              <img src={(p.images && p.images[0]) || p.image || 'https://images.unsplash.com/photo-1520975964732-35dd22d3d648?q=80&w=1200&auto=format&fit=crop'} alt={p.title || p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.05]"/>
-              <button onClick={() => addToWishlist(p.id)} className="absolute top-2 right-2 inline-flex items-center justify-center rounded-full bg-white/90 backdrop-blur p-2 text-rose-500 shadow">
-                <Heart size={18} />
-              </button>
-              {p.sale_price && (
-                <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-semibold text-white">Sale</span>
-              )}
-            </div>
-            <div className="p-3">
-              <div className="flex items-center gap-1 text-amber-500 text-xs">
-                <Star size={14} fill="currentColor" />
-                <span className="font-medium">{p.rating ?? 4.6}</span>
-                <span className="text-neutral-400">({p.reviews ?? 120})</span>
-              </div>
-              <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{p.title || p.name}</h3>
-              <div className="mt-1 flex items-baseline gap-2">
-                {p.sale_price ? (
-                  <>
-                    <span className="text-sm font-bold text-emerald-600">{formatCurrency(p.sale_price)}</span>
-                    <span className="text-xs text-neutral-400 line-through">{formatCurrency(p.price)}</span>
-                  </>
-                ) : (
-                  <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">{formatCurrency(p.price)}</span>
+        {filtered.map((p, i) => {
+          const pid = p.id || p._id || p.product_id || i;
+          const title = p.title || p.name || 'Produk';
+          const price = p.price ?? 0;
+          const sale = p.sale_price;
+          const img = (Array.isArray(p.images) && p.images[0]) || p.image || 'https://images.unsplash.com/photo-1520975964732-35dd22d3d648?q=80&w=1200&auto=format&fit=crop';
+          return (
+            <motion.div
+              key={pid}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="group overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+            >
+              <div className="relative aspect-[4/5] overflow-hidden">
+                <img src={img} alt={title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.05]"/>
+                <button onClick={() => addToWishlist(pid)} className="absolute top-2 right-2 inline-flex items-center justify-center rounded-full bg-white/90 backdrop-blur p-2 text-rose-500 shadow">
+                  <Heart size={18} />
+                </button>
+                {sale && (
+                  <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-semibold text-white">Sale</span>
                 )}
               </div>
-              <div className="mt-3 flex justify-between">
-                <button onClick={() => addToCart(p.id)} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium">
-                  <ShoppingBag size={14} /> Tambah
-                </button>
-                <button className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:underline">Detail</button>
+              <div className="p-3">
+                <div className="flex items-center gap-1 text-amber-500 text-xs">
+                  <Star size={14} fill="currentColor" />
+                  <span className="font-medium">{p.rating ?? 4.6}</span>
+                  <span className="text-neutral-400">({p.reviews ?? 120})</span>
+                </div>
+                <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{title}</h3>
+                <div className="mt-1 flex items-baseline gap-2">
+                  {sale ? (
+                    <>
+                      <span className="text-sm font-bold text-emerald-600">{formatCurrency(sale)}</span>
+                      <span className="text-xs text-neutral-400 line-through">{formatCurrency(price)}</span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">{formatCurrency(price)}</span>
+                  )}
+                </div>
+                <div className="mt-3 flex justify-between">
+                  <button onClick={() => addToCart(pid)} className="inline-flex items-center gap-1 rounded-full border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium">
+                    <ShoppingBag size={14} /> Tambah
+                  </button>
+                  <button className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:underline">Detail</button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
